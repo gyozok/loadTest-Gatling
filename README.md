@@ -99,3 +99,10 @@ cd load-tests
 mvn gatling:test
 ```
 
+## What this project intentionally leaves out
+
+To keep this scoped as a practice/demo project rather than a production system:
+- No real cloud deployment (AWS/Azure/GCP) — designed to be portable to one; see notes in k8s/ on what would change for EKS/AKS/GKE and a managed Kafka service
+- No authentication/authorization on the API
+- Single-node Kafka, not a production cluster
+- H2 in-memory DB instead of a managed relational database
