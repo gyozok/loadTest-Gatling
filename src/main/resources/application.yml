@@ -22,8 +22,16 @@ spring:
       enabled: true
       path: /h2-console
 
+  kafka:
+    bootstrap-server: localhost:9092
+
 management:
   endpoints:
     web:
       exposure:
         include: health, info, prometheus
+
+app:
+  kafka:
+    topic:
+      order-events: order-events

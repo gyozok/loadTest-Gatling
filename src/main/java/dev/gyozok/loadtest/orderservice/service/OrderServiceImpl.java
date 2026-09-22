@@ -8,6 +8,7 @@ import dev.gyozok.loadtest.orderservice.model.OrderStatus;
 import dev.gyozok.loadtest.orderservice.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,8 @@ import java.util.Optional;
 public class OrderServiceImpl implements OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
-    private static final String ORDER_EVENTS_TOPIC = "order-events";
+    @Value("${app.kafka.topic.order-events:order-create-events}")
+    private static String ORDER_EVENTS_TOPIC;
 
     private final OrderRepository orderRepository;
     private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
