@@ -71,5 +71,25 @@ services:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
 
+  # The order producer service (Spring Boot). Built from its own Dockerfile
+  # in this directory rather than pulled from a registry, since this is the
+  # app under active development.
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8080:8080"
+    environment:
+      # Overrides application.yml's spring.kafka.bootstrap-servers.
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        # wait until topic is created
+        condition: service_completed_successfully
+
 volumes:
   kafka-data:
