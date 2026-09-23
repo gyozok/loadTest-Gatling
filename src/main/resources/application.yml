@@ -23,7 +23,7 @@ spring:
       path: /h2-console
 
   kafka:
-    bootstrap-server: localhost:9094
+    bootstrap-servers: localhost:9094
 
 management:
   endpoints:
