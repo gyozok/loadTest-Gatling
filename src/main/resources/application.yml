@@ -23,7 +23,7 @@ spring:
       path: /h2-console
 
   kafka:
-    bootstrap-server: localhost:9092
+    bootstrap-server: localhost:9094
 
 management:
   endpoints:
@@ -43,3 +43,10 @@ app:
   kafka:
     topic:
       order-events: order-events
+
+logging:
+  level:
+    org:
+      apache:
+        kafka:
+          clients=DEBUG:

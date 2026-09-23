@@ -20,7 +20,7 @@ public class OrderServiceImpl implements OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
     @Value("${app.kafka.topic.order-events:order-create-events}")
-    private static String ORDER_EVENTS_TOPIC;
+    private String ORDER_EVENTS_TOPIC;
 
     private final OrderRepository orderRepository;
     private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
