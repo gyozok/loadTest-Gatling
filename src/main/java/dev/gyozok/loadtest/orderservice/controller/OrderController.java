@@ -31,7 +31,7 @@ public class OrderController {
         OrderResponse response = orderService.createOrder(request);
         return ResponseEntity
                 .accepted() //return 202, because processing happens downstream
-                .location(URI.create("/orders" + response.id())) //point to the newly created order, pollfor the result
+                .location(URI.create("/orders/" + response.id())) //point to the newly created order, pollfor the result
                 .body(response);
 
     }
