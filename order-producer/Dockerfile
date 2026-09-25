@@ -11,12 +11,14 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
-RUN ./mvnw dependency:go-offline -B
+COPY order-producer/pom.xml order-producer/pom.xml
+COPY order-consumer/pom.xml order-consumer/pom.xml
+RUN ./mvnw -pl order-producer -am dependency:go-offline -B
 
 # Now copy the actual source and build. Only this layer re-runs when
 # application code changes.
-COPY src src
-RUN ./mvnw clean package -DskipTests -B
+COPY order-producer/src order-producer/src
+RUN ./mvnw -pl order-producer -am clean package -DskipTests -B
 
 # --- Stage 2: runtime ---
 # JRE only, not JDK
@@ -29,7 +31,7 @@ WORKDIR /app
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 USER spring:spring
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/order-producer/target/*.jar app.jar
 
 EXPOSE 8080
 

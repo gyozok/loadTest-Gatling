@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: order-consumer
+
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: order-consumer-group
+      auto-offset-reset: earliest
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
