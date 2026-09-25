@@ -8,17 +8,11 @@
         <groupId>dev.gyozok</groupId>
         <artifactId>order-service</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-<!--        <relativePath>../pom.xml</relativePath>-->
     </parent>
 
     <artifactId>order-consumer</artifactId>
     <packaging>jar</packaging>
 
-    <!-- Deliberately lean compared to order-producer: no spring-boot-starter-web
-         (this service has no REST API, only a Kafka listener), no JPA/H2 yet -
-         added if/when the consumer needs its own persistence. Keeping a
-         service's dependencies limited to what it actually uses is itself
-         part of the microservices story worth being able to explain. -->
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

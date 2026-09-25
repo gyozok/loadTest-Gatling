@@ -6,7 +6,6 @@
 		<groupId>dev.gyozok</groupId>
 		<artifactId>order-service</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
-<!--		<relativePath>../pom.xml</relativePath>-->
 	</parent>
 	<groupId>dev.gyozok</groupId>
 	<artifactId>order-producer</artifactId>
@@ -105,6 +104,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+<!--				spring-boot-maven-plugin's repackage goal (which turns a plain jar into an executable one with a Main-Class manifest
+ 				and embedded dependencies) is only automatically bound to the package phase when your project inherits from spring-boot-starter-parent.
+ 				Our setup uses a custom aggregator pom.xml instead — so that automatic binding never happened. Maven built the plain jar, repackage never ran,
+ 				and java -jar app.jar correctly complains there's no Main-Class to run.-->
 				<executions>
 					<execution>
 						<goals>
