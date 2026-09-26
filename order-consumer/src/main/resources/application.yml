@@ -1,8 +1,8 @@
 spring:
   application:
     name: order-consumer
-#  main:
-#    web-application-type: servlet
+  main:
+    web-application-type: servlet
 
   kafka:
     bootstrap-servers: localhost:9094
