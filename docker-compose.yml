@@ -92,20 +92,20 @@ services:
         # wait until topic is created
         condition: service_completed_successfully
 
-#  order-consumer:
-#    build:
-#      context: .
-#      dockerfile: order-consumer/Dockerfile
-#    container_name: order-consumer
-#    ports:
-#      - "8082:8082"
-#    environment:
-#      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-#    depends_on:
-#      kafka:
-#        condition: service_healthy
-#      kafka-init:
-#        condition: service_completed_successfully
+  order-consumer:
+    build:
+      context: .
+      dockerfile: order-consumer/Dockerfile
+    container_name: order-consumer
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
 
 volumes:
   kafka-data:

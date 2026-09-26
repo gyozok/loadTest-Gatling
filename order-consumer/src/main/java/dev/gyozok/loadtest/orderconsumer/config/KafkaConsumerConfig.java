@@ -1,6 +1,7 @@
 package dev.gyozok.loadtest.orderconsumer.config;
 
 import dev.gyozok.loadtest.orderconsumer.event.OrderCreatedEvent;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaOperations;
+import org.springframework.kafka.core.MicrometerConsumerListener;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
@@ -44,7 +46,9 @@ public class KafkaConsumerConfig {
     private long retryMaxElapsedMs;
 
     @Bean
-    public ConsumerFactory<String, OrderCreatedEvent> orderConsumerFactory() {
+    public ConsumerFactory<String, OrderCreatedEvent> orderConsumerFactory(
+            MeterRegistry meterRegistry
+    ) {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -78,7 +82,12 @@ public class KafkaConsumerConfig {
         // the record regardless of what the producer's class was named.
         config.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
-        return new DefaultKafkaConsumerFactory<>(config);
+        DefaultKafkaConsumerFactory<String, OrderCreatedEvent> factory =
+                new DefaultKafkaConsumerFactory<>(config);
+
+        factory.addListener(new MicrometerConsumerListener<>(meterRegistry));
+
+        return factory;
     }
 
     /**
