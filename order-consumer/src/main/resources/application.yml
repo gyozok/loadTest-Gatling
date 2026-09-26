@@ -20,3 +20,8 @@ management:
     health:
       probes:
         enabled: true
+
+app:
+  kafka:
+    topic:
+      order-events: order-events
