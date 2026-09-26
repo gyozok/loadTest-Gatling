@@ -23,5 +23,10 @@ management:
 
 app:
   kafka:
+    retry:
+      initial-interval-ms: 1000
+      multiplier: 2.0
+      max-interval-ms: 10000
+      max-elapsed-ms: 30000
     topic:
       order-events: order-events

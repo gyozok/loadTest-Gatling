@@ -10,8 +10,12 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.KafkaOperations;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
+import org.springframework.util.backoff.ExponentialBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +29,19 @@ public class KafkaConsumerConfig {
 
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
+
+    //Retry setups
+    @Value("${app.kafka.retry.initial=interval=ms:1000}")
+    private long retryInitialIntervalMs;
+
+    @Value("${app.kafka.retry.max-interval-ms:10000}")
+    private long retryMaxIntervalMs;
+
+    @Value("${app.kafka.retry.multiplier:2.0}")
+    private double retryMultiplier;
+
+    @Value("${app.kafka.retry.max-elapsed-ms:30000}")
+    private long retryMaxElapsedMs;
 
     @Bean
     public ConsumerFactory<String, OrderCreatedEvent> orderConsumerFactory() {
@@ -49,11 +66,11 @@ public class KafkaConsumerConfig {
         // JsonDeserializer refuses to deserialize into any class it wasn't
         // explicitly told to trust, as a safety default - this whitelists
         // just the one package this consumer actually expects events from.
-        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.example.orderconsumer.event");
+        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "dev.gyozok.orderconsumer.event");
         config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, OrderCreatedEvent.class.getName());
 
         // order-producer's JsonSerializer sends a __TypeId__ header naming
-        // its own class (com.example.orderservice.event.OrderCreatedEvent).
+        // its own class (dev.gyozok.orderservice.event.OrderCreatedEvent).
         // That class doesn't exist on order-consumer's classpath - these two
         // services deliberately don't share code (see OrderCreatedEvent's
         // own javadoc). Ignoring the header and trusting VALUE_DEFAULT_TYPE
@@ -74,10 +91,46 @@ public class KafkaConsumerConfig {
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, OrderCreatedEvent> kafkaListenerContainerFactory(
-            ConsumerFactory<String, OrderCreatedEvent> orderConsumerFactory) {
+            ConsumerFactory<String, OrderCreatedEvent> orderConsumerFactory,
+            DefaultErrorHandler errorHandler
+    ) {
         ConcurrentKafkaListenerContainerFactory<String, OrderCreatedEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(orderConsumerFactory);
+        factory.setCommonErrorHandler(errorHandler);
+
         return factory;
+    }
+
+
+    /**
+     * Sends a message to <original-topic>-dlt (DeadLetterPublishingRecoverer's
+     * default naming convention) after retries are exhausted, preserving the
+     * original key and adding headers that record the exception and the
+     * original topic/partition/offset - so a message on the DLT can be
+     * traced back to exactly where and why it failed, rather than showing
+     * up as an unexplained orphan.
+     *
+     * kafkaOperations is the dltKafkaTemplate bean from KafkaProducerConfig
+     */
+    @Bean
+    public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(
+            KafkaOperations<String, OrderCreatedEvent> kafkaOperations
+    ) {
+        return new DeadLetterPublishingRecoverer(kafkaOperations);
+    }
+
+    /**
+     * Retries a failing message with exponential backoff (1s, 2s, 4s, 8s...
+     * capped at retryMaxIntervalMs) up to retryMaxElapsedMs total, then hands
+     * it to the DeadLetterPublishingRecoverer instead of retrying forever.
+     */
+    @Bean
+    public DefaultErrorHandler errorHandler(DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
+        ExponentialBackOff backOff = new ExponentialBackOff(retryInitialIntervalMs, retryMultiplier);
+        backOff.setMaxInterval(retryMaxIntervalMs);
+        backOff.setMaxElapsedTime(retryMaxElapsedMs);
+
+        return new DefaultErrorHandler(deadLetterPublishingRecoverer, backOff);
     }
 }

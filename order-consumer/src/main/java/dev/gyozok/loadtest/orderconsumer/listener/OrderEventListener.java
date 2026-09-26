@@ -21,5 +21,10 @@ public class OrderEventListener {
     ) {
         log.info("Received OrderCreatedEvent: orderId={}, item={}, quantity={} (partition={}, offset={})",
                 event.orderId(), event.item(), event.quantity(), partition, offset);
+
+        if ("force-fail".equals(event.item())) {
+            throw new RuntimeException("Simulated processing failure for order " + event.orderId());
+        }
+
     }
 }
